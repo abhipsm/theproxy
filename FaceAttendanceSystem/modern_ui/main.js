@@ -186,18 +186,16 @@ function startPythonBackend() {
     });
 
     // Now wait for the API to become available
-    sendSplashStatus('progress', 'Loading AI Models', 25);
+    sendSplashStatus('progress', 'Starting Services', 25);
     
     let attempts = 0;
     const maxAttempts = 60; // 60 seconds timeout
     
     const progressStages = [
-      { at: 5,  msg: 'Loading Face Recognition Models', pct: 30 },
-      { at: 10, msg: 'Loading YOLOv8 Detection Model', pct: 40 },
-      { at: 15, msg: 'Initializing Anti-Spoofing Module', pct: 50 },
-      { at: 20, msg: 'Connecting to Database', pct: 60 },
-      { at: 30, msg: 'Almost ready', pct: 75 },
-      { at: 45, msg: 'Finalizing startup', pct: 85 },
+      { at: 5,  msg: 'Initializing Secure Modules', pct: 30 },
+      { at: 12, msg: 'Calibrating AI Engine', pct: 50 },
+      { at: 25, msg: 'Synchronizing Workspace', pct: 70 },
+      { at: 40, msg: 'Finalizing Startup', pct: 90 },
     ];
 
     const check = () => {
