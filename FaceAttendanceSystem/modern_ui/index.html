@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Proxy Face Attendance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .drag-region { -webkit-app-region: drag; height: 32px; width: 100%; position: absolute; top: 0; z-index: 50; }
+        .no-drag { -webkit-app-region: no-drag; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex pt-8">
+    <div class="drag-region"></div>
+    
+    <!-- PUBG-Style Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 z-[100] bg-black flex items-center justify-center" style="transition: opacity 0.8s ease;">
+        <!-- Splash 1: DevSoft logo + proxy.ai text -->
+        <div id="splash-1" class="absolute inset-0 flex flex-col items-center justify-center opacity-0" style="transition: opacity 1s ease;">
+            <img src="2-removebg-preview.png" alt="DevSoft" class="w-64 h-64 mb-6" style="filter: brightness(0.9);">
+            <p class="text-gray-500 text-lg font-medium tracking-[0.3em] uppercase mt-2">Proxy.ai</p>
+        </div>
+        
+        <!-- Splash 2: Main Proxy logo + copyright -->
+        <div id="splash-2" class="absolute inset-0 flex flex-col items-center justify-center opacity-0" style="transition: opacity 1s ease;">
+            <img src="logo.png" alt="Proxy" class="w-40 h-40 mb-6">
+            <h1 class="text-5xl font-black text-white tracking-tight">Proxy<span class="text-emerald-400">.ai</span></h1>
+            <p class="text-gray-600 text-sm font-medium mt-4 tracking-wider">Smart Attendance System</p>
+            <div class="mt-8 flex flex-col items-center gap-2">
+                <div class="w-8 h-1 bg-emerald-500 rounded-full animate-pulse"></div>
+            </div>
+        </div>
+        
+        <!-- Copyright at bottom -->
+        <div class="absolute bottom-8 text-center opacity-40">
+            <p class="text-gray-500 text-xs font-medium tracking-wider">© 2026 DevSoft Technologies. All Rights Reserved.</p>
+            <p class="text-gray-600 text-[10px] mt-1 tracking-wide">Powered by Deep ML Face Recognition</p>
+        </div>
+    </div>
+    
+    <!-- Landing View -->
+    <div id="view-landing" class="view-section w-full h-full flex flex-col items-center justify-center bg-white">
+        <h1 class="text-7xl font-extrabold text-gray-900 tracking-tight mb-4">Proxy<span class="text-emerald-500">.ai</span></h1>
+        <p class="text-gray-500 mb-16 text-xl max-w-lg text-center leading-relaxed">The next-generation smart attendance system powered by deep texture machine learning.</p>
+        
+        <div class="flex gap-6">
+            <button onclick="startPublicScanner()" class="px-10 py-5 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/30 text-xl transform hover:-translate-y-1">
+                Start Attendance
+            </button>
+            <button onclick="navigate('login')" class="px-10 py-5 bg-white text-gray-700 font-bold rounded-2xl border-2 border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition-all shadow-sm text-xl transform hover:-translate-y-1">
+                Login as Admin
+            </button>
+        </div>
+    </div>
+
+    <!-- Login View -->
+    <div id="view-login" class="view-section w-full h-full flex flex-col items-center justify-center bg-[#f8fafc] hidden">
+        <div class="w-full max-w-md bg-white p-10 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Admin Login</h2>
+            <p class="text-gray-500 mb-8 text-sm">Sign in to Proxy.ai to manage attendance records.</p>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">User ID</label>
+                    <input type="text" id="login-user" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50 focus:bg-white transition-colors" placeholder="Admin ID">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                    <input type="password" id="login-pass" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50 focus:bg-white transition-colors" placeholder="••••••••">
+                </div>
+                <p id="login-error" class="text-rose-500 text-sm font-medium hidden">Invalid credentials</p>
+                <div class="pt-4 flex gap-4">
+                    <button onclick="navigate('landing')" class="flex-1 py-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors">Back</button>
+                    <button id="btn-login" onclick="doLogin()" class="flex-[2] py-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20 text-lg flex items-center justify-center gap-2">
+                        <svg id="login-spinner" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="login-text">Login</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container" class="hidden w-full h-full flex">
+        <!-- Sidebar -->
+        <div id="sidebar" class="w-64 bg-white border-r border-gray-200 p-6 flex flex-col h-full z-10 no-drag">
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-8">Proxy<span class="text-emerald-500">.ai</span></h1>
+            
+            <nav class="flex-1 space-y-2">
+                <button onclick="navigate('dashboard')" class="w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors bg-emerald-50 text-emerald-600" id="btn-dashboard">
+                    Dashboard
+                </button>
+                <button onclick="navigate('manage-attendance')" class="w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors" id="btn-manage-attendance">
+                    Manage Attendance
+                </button>
+                <button onclick="navigate('calendar')" class="w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors" id="btn-calendar">
+                    Monthly Calendar
+                </button>
+                <button onclick="navigate('manage-candidates')" class="w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors" id="btn-manage-candidates">
+                    Manage Candidates
+                </button>
+                <button onclick="navigate('scanner')" class="w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors" id="btn-scanner">
+                    Live Scanner
+                </button>
+                <button onclick="navigate('register')" class="w-full flex items-center px-4 py-3 text-sm font-bold rounded-xl text-gray-700 hover:bg-gray-50 transition-colors" id="btn-register">
+                    Register Student
+                </button>
+            </nav>
+            
+            <div class="mt-auto">
+                <button onclick="logout()" class="w-full py-3 mb-4 text-rose-500 font-bold text-sm rounded-xl hover:bg-rose-50 transition-colors border border-rose-100">Log Out</button>
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <p class="text-sm font-bold text-gray-800">Admin Session</p>
+                    <p class="text-xs text-gray-500">Secure connection</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto bg-[#f8fafc] p-10 no-drag relative" id="content-area">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view-section">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-extrabold text-gray-800">Overview</h2>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-8 mb-10">
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-center">
+                        <p class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Total Students</p>
+                        <p class="text-6xl font-extrabold text-gray-800" id="stat-total">0</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-emerald-100 flex flex-col justify-center relative overflow-hidden">
+                        <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+                        <div class="relative z-10">
+                            <p class="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-2">Present Today</p>
+                            <p class="text-6xl font-extrabold text-emerald-500" id="stat-present">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Section -->
+                <div class="grid grid-cols-2 gap-8 mb-10 mt-8">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-center h-[350px]">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Today's Status</h3>
+                        <canvas id="dash-pie-chart" class="w-full h-full"></canvas>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-center h-[350px]">
+                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">By Class (Today)</h3>
+                        <canvas id="dash-bar-chart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-10 h-[400px]">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Attendance Trend (Wave)</h3>
+                    <canvas id="dash-wave-chart" class="w-full h-full"></canvas>
+                </div>
+                
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Today's Attendance</h3>
+                    <div class="flex gap-2">
+                        <button id="tab-present" onclick="switchDashboardTab('present')" class="px-4 py-2 bg-emerald-50 text-emerald-600 font-bold rounded-lg text-sm border border-emerald-100 transition-colors">Present</button>
+                        <button id="tab-absent" onclick="switchDashboardTab('absent')" class="px-4 py-2 bg-white text-gray-500 font-bold rounded-lg text-sm border border-gray-100 hover:bg-gray-50 transition-colors">Absent</button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50/50 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                                <th class="py-5 px-8 font-bold">Name</th>
+                                <th class="py-5 px-8 font-bold">Class</th>
+                                <th class="py-5 px-8 font-bold">Time</th>
+                                <th class="py-5 px-8 font-bold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body" class="text-sm text-gray-700">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="view-calendar" class="view-section hidden flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-extrabold text-gray-800">Monthly Calendar</h2>
+                    <div class="flex gap-4">
+                        <input type="month" id="calendar-month" onchange="renderCalendar()" class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium text-gray-700 shadow-sm cursor-pointer">
+                        <select id="calendar-class-filter" onchange="renderCalendar()" class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium text-gray-700 shadow-sm cursor-pointer">
+                            <option value="all">All Classes</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-8 flex flex-col">
+                    <div class="grid grid-cols-7 gap-4 mb-4 text-center font-bold text-gray-400 uppercase text-xs tracking-wider">
+                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-4" id="calendar-grid">
+                        <!-- Calendar days populated here -->
+                    </div>
+                </div>
+                
+                <div id="calendar-details" class="hidden bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mt-4">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6" id="calendar-selected-date">Selected Date</h3>
+                    <div class="grid grid-cols-2 gap-8">
+                        <!-- Present Table -->
+                        <div class="border border-emerald-100 rounded-2xl overflow-hidden shadow-sm">
+                            <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100">
+                                <h4 class="font-bold text-emerald-700">Present Students</h4>
+                            </div>
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                                        <th class="py-3 px-6 font-bold">Name</th>
+                                        <th class="py-3 px-6 font-bold text-right">Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="calendar-present-list" class="text-sm text-gray-700 divide-y divide-gray-50">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Absent Table -->
+                        <div class="border border-rose-100 rounded-2xl overflow-hidden shadow-sm">
+                            <div class="bg-rose-50 px-6 py-4 border-b border-rose-100">
+                                <h4 class="font-bold text-rose-700">Absent Students</h4>
+                            </div>
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                                        <th class="py-3 px-6 font-bold">Name</th>
+                                        <th class="py-3 px-6 font-bold text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="calendar-absent-list" class="text-sm text-gray-700 divide-y divide-gray-50">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Manage Candidates View -->
+            <div id="view-manage-candidates" class="view-section hidden h-full flex flex-col">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-extrabold text-gray-800">Manage Candidates</h2>
+                    <button onclick="navigate('register')" class="px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-sm">
+                        + Add New Candidate
+                    </button>
+                </div>
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex-1 flex flex-col">
+                    <div class="overflow-y-auto flex-1">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky top-0 bg-gray-50/90 backdrop-blur z-10">
+                                <tr class="text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                                    <th class="py-5 px-8 font-bold">Name</th>
+                                    <th class="py-5 px-8 font-bold">Class</th>
+                                    <th class="py-5 px-8 font-bold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manage-candidates-body" class="text-sm text-gray-700">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manage Attendance View -->
+            <div id="view-manage-attendance" class="view-section hidden flex flex-col h-full">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-extrabold text-gray-800">All Attendance</h2>
+                    <div class="flex gap-4">
+                        <input type="date" id="date-filter" onchange="filterAttendanceData()" class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium text-gray-700 shadow-sm cursor-pointer">
+                        <select id="class-filter" onchange="filterAttendanceData()" class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium text-gray-700 shadow-sm cursor-pointer">
+                            <option value="all">All Classes</option>
+                        </select>
+                        <button onclick="downloadAttendanceCSV()" class="px-6 py-3 bg-indigo-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-100 transition-colors border border-indigo-100 flex items-center gap-2 shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <p class="text-sm font-bold text-gray-400 uppercase">Total Records</p>
+                        <p class="text-3xl font-extrabold text-gray-800 mt-1" id="manage-stat-total">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
+                        <p class="text-sm font-bold text-emerald-400 uppercase">Total Present</p>
+                        <p class="text-3xl font-extrabold text-emerald-500 mt-1" id="manage-stat-present">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100">
+                        <p class="text-sm font-bold text-indigo-400 uppercase">Overall Attendance %</p>
+                        <p class="text-3xl font-extrabold text-indigo-500 mt-1" id="manage-stat-percent">0%</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex-1 flex flex-col">
+                    <div class="overflow-y-auto flex-1">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky top-0 bg-gray-50/90 backdrop-blur z-10">
+                                <tr class="text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                                    <th class="py-5 px-8 font-bold">Date</th>
+                                    <th class="py-5 px-8 font-bold">Time</th>
+                                    <th class="py-5 px-8 font-bold">Student Name</th>
+                                    <th class="py-5 px-8 font-bold">Class</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-attendance-body" class="text-sm text-gray-700">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scanner View -->
+            <div id="view-scanner" class="view-section hidden h-full flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-extrabold text-gray-800">Live AI Scanner</h2>
+                    <button id="btn-exit-scanner" onclick="navigate('landing')" class="hidden px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors">
+                        Close Scanner
+                    </button>
+                </div>
+                <div class="flex flex-1 gap-6 pb-6">
+                    <div class="flex-1 bg-white p-2 rounded-3xl shadow-sm border border-gray-200 flex flex-col items-center justify-center overflow-hidden bg-black relative">
+                        <video id="video-stream" autoplay playsinline class="rounded-2xl h-full w-full object-cover hidden"></video>
+                        <canvas id="overlay-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-10 hidden"></canvas>
+                        
+                        <!-- BIG ILLEGAL ACTIVITY OVERLAY -->
+                        <div id="spoof-warning-overlay" class="hidden absolute inset-0 z-30 bg-rose-600/90 backdrop-blur-sm flex flex-col items-center justify-center animate-pulse rounded-2xl border-4 border-rose-500 shadow-[inset_0_0_100px_rgba(225,29,72,1)]">
+                            <svg class="w-32 h-32 text-white mb-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <h1 class="text-6xl font-black text-white tracking-widest uppercase text-center drop-shadow-2xl">Illegal<br>Activity</h1>
+                            <p class="text-rose-100 text-2xl font-bold mt-4 tracking-widest bg-black/30 px-6 py-2 rounded-full uppercase">Phone Screen Detected</p>
+                        </div>
+
+                        <div id="video-placeholder" class="text-gray-400 text-lg flex flex-col items-center h-full justify-center w-full bg-gray-50 rounded-2xl absolute inset-0 z-20">
+                            <span class="mb-4 font-medium">Camera Offline</span>
+                            <button onclick="startScanner()" class="px-10 py-4 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30">Start Feed</button>
+                        </div>
+                    </div>
+                    <div class="w-80 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col h-full">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-4">Recently Marked</h3>
+                        <div id="live-logs" class="flex-1 overflow-y-auto space-y-3 pr-2">
+                            <p class="text-gray-400 text-sm italic mt-4">Waiting for faces...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Register View -->
+            <div id="view-register" class="view-section hidden">
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-6">Register Student</h2>
+                <div class="flex gap-6 max-w-5xl">
+                    <div class="flex-1 bg-white p-10 rounded-3xl shadow-sm border border-gray-100">
+                        <p class="text-gray-500 mb-8 text-sm leading-relaxed">Our AI will automatically perform a deep ML texture scan to ensure the face is real (no screens or photos allowed).</p>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
+                                <input type="text" id="reg-name" class="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50 focus:bg-white transition-colors" placeholder="e.g. Nolasco Martinez">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Class</label>
+                                <input type="text" id="reg-class" class="w-full px-5 py-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50 focus:bg-white transition-colors" placeholder="e.g. CS101">
+                            </div>
+                            <button onclick="captureRegistration()" class="w-full py-5 mt-4 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20 text-lg">
+                                Run AI Scan & Register
+                            </button>
+                            <p id="reg-status" class="text-sm text-center mt-4 text-gray-500 font-medium"></p>
+                        </div>
+                    </div>
+                    <div class="w-80 bg-white p-2 rounded-3xl shadow-sm border border-gray-200 flex flex-col items-center justify-center overflow-hidden bg-black relative">
+                         <video id="reg-video-stream" autoplay playsinline class="rounded-2xl h-full w-full object-cover hidden"></video>
+                         <div id="reg-video-placeholder" class="text-gray-400 text-lg flex flex-col items-center h-full justify-center w-full bg-gray-50 rounded-2xl absolute inset-0 z-20">
+                            <span class="mb-4 text-center px-4 text-sm font-medium">Camera Offline</span>
+                            <button onclick="startRegScanner()" class="px-8 py-3 bg-emerald-500 text-white font-bold rounded-full hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30 text-sm">Preview Camera</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Hidden PDF Template -->
+    <div id="pdf-template-container" style="display: none; position: absolute; top: -9999px; left: -9999px;">
+        <div id="student-pdf-report" class="bg-white p-10 text-gray-800" style="width: 800px; font-family: 'Inter', sans-serif;">
+            <div class="border-b-4 border-emerald-500 pb-6 mb-6 flex justify-between items-end">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Proxy<span class="text-emerald-500">.ai</span></h1>
+                    <p class="text-gray-500 mt-2">Annual Student Attendance Report</p>
+                </div>
+                <div class="text-right text-sm text-gray-500" id="pdf-date"></div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 mb-8 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                <div>
+                    <p class="text-sm font-bold text-gray-400 uppercase">Student Name</p>
+                    <p class="text-2xl font-bold text-gray-800" id="pdf-student-name">Name</p>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-gray-400 uppercase">Class/Department</p>
+                    <p class="text-2xl font-bold text-gray-800" id="pdf-student-class">Class</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Yearly Overview</h3>
+                    <div class="flex justify-between mb-2"><span class="text-gray-500">Total School Days:</span> <span class="font-bold" id="pdf-total-days">0</span></div>
+                    <div class="flex justify-between mb-2"><span class="text-gray-500">Days Present:</span> <span class="font-bold text-emerald-500" id="pdf-present-days">0</span></div>
+                    <div class="flex justify-between mb-2"><span class="text-gray-500">Days Absent:</span> <span class="font-bold text-rose-500" id="pdf-absent-days">0</span></div>
+                    <div class="flex justify-between mt-4 pt-4 border-t"><span class="text-gray-800 font-bold">Attendance %:</span> <span class="font-bold text-indigo-500 text-xl" id="pdf-percentage">0%</span></div>
+                </div>
+                <div class="flex items-center justify-center">
+                    <canvas id="pdf-pie-chart" width="200" height="200"></canvas>
+                </div>
+            </div>
+            
+            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Attendance Log (Present Days)</h3>
+            <table class="w-full text-left text-sm border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600">
+                        <th class="py-3 px-4 border">Date</th>
+                        <th class="py-3 px-4 border">Time Recorded</th>
+                    </tr>
+                </thead>
+                <tbody id="pdf-log-body">
+                    <!-- Logs go here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

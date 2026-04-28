@@ -1,0 +1,51 @@
+END USER LICENSE AGREEMENT (EULA)
+
+Proxy.ai Face Attendance System
+Version 1.0.0
+Copyright (c) 2026 DevSoft Technologies. All rights reserved.
+
+IMPORTANT - READ CAREFULLY BEFORE INSTALLING OR USING THIS SOFTWARE.
+
+By installing, copying, or otherwise using this software, you acknowledge 
+that you have read, understood, and agree to be bound by the terms and 
+conditions of this agreement.
+
+1. GRANT OF LICENSE
+DevSoft Technologies grants you a non-exclusive, non-transferable license 
+to install and use Proxy.ai Face Attendance System ("Software") on a 
+single computer for your organization's internal attendance management.
+
+2. RESTRICTIONS
+You may not:
+  - Distribute, sublicense, or sell copies of the Software.
+  - Reverse engineer, decompile, or disassemble the Software.
+  - Modify or create derivative works based on the Software.
+  - Use the Software for any unlawful purpose.
+
+3. DATA PRIVACY
+This Software processes facial recognition data locally on your device.
+No biometric data is transmitted to external servers. All face encodings 
+are stored locally in the configured MySQL database.
+
+4. AI & MACHINE LEARNING NOTICE
+This Software uses YOLOv8 object detection and passive anti-spoofing 
+algorithms. These AI models run entirely offline on the local machine.
+
+5. DISCLAIMER OF WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+6. LIMITATION OF LIABILITY
+IN NO EVENT SHALL DEVSOFT TECHNOLOGIES BE LIABLE FOR ANY DAMAGES ARISING 
+OUT OF THE USE OR INABILITY TO USE THIS SOFTWARE.
+
+7. TERMINATION
+This license is effective until terminated. It will terminate automatically 
+if you fail to comply with any term of this agreement.
+
+By clicking "I Agree" during installation, you confirm your acceptance 
+of these terms.
+
+DevSoft Technologies
+www.devsoft.tech

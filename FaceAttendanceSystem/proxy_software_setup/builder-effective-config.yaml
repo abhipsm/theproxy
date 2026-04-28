@@ -1,0 +1,31 @@
+directories:
+  output: ../proxy_software_setup
+  buildResources: build
+appId: com.devsoft.proxyai
+productName: Proxy.ai Face Attendance
+win:
+  target: nsis
+  icon: logo.png
+nsis:
+  oneClick: false
+  perMachine: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  runAfterFinish: true
+  artifactName: setup.exe
+  license: install_instruction.txt
+extraFiles:
+  - from: C:/Users/manda/AppData/Local/Programs/Python/Python314
+    to: backend/Python314
+    filter:
+      - '**/*'
+  - from: ../
+    to: backend/app
+    filter:
+      - api.py
+      - camera.py
+      - database.py
+      - yolov8n.pt
+      - .env
+files: []
+electronVersion: 29.4.6

@@ -1,0 +1,9 @@
+Proxy.ai Face Attendance System
+By DevSoft Technologies
+
+INSTALLATION INSTRUCTIONS:
+Please click "I Agree" to install the software. 
+This setup will install all necessary AI components. 
+No programming environment is required to run this software.
+
+Thank you for choosing Proxy.ai!

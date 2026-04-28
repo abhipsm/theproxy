@@ -1,0 +1,9 @@
+customtkinter
+opencv-python
+face_recognition
+supabase
+Pillow
+numpy
+mediapipe
+python-dotenv
+ultralytics

@@ -1,0 +1,32 @@
+# Windows/Electron/Python Git Ignore
+
+# Large Binaries (Crucial to ignore for GitHub)
+*.exe
+*.msi
+*.zip
+*.7z
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+myenv/
+.env
+
+# Node / Electron
+node_modules/
+dist/
+build/
+win-unpacked/
+*.log
+
+# Project Specific
+proxy_software_setup/ProxyAI_Setup_v1.0.0.exe
+FaceAttendanceSystem/proxy_software_setup/Proxy_Face_Attendance_Standalone/
+FaceAttendanceSystem/modern_ui/node_modules/
+FaceAttendanceSystem/modern_ui/dist/
+
+# OS junk
+.DS_Store
+Thumbs.db

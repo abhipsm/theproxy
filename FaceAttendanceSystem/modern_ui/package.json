@@ -1,0 +1,46 @@
+{
+  "name": "proxy-ai-attendance",
+  "version": "1.0.0",
+  "description": "Proxy.ai Smart Attendance System",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^29.4.6",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.devsoft.proxyai",
+    "productName": "ProxyFaceAttendance",
+    "directories": {
+      "output": "C:/temp/proxy_software_setup"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "logo.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "runAfterFinish": true,
+      "artifactName": "setup.exe",
+      "license": "install_instruction.txt"
+    },
+    "extraFiles": [
+      {
+        "from": "C:/Users/manda/AppData/Local/Programs/Python/Python314",
+        "to": "backend/Python314",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../",
+        "to": "backend/app",
+        "filter": ["api.py", "camera.py", "database.py", "yolov8n.pt", ".env"]
+      }
+    ]
+  }
+}
